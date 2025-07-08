@@ -16,6 +16,8 @@ app.use("/contacts", require("./routes/contactRoutes"));
 
 app.use("/contactauth", contactAuthRoutes);
 
+app.use("/users", require("./routes/userRoutes"));
+
 app.use(errorHandler);
 
 app.listen(port, () => {

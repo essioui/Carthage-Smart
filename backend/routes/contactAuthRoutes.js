@@ -7,7 +7,7 @@ const {
     seeProfile
 } = require("../controllers/contactAuthController");
 
-const validateContactToken = require("../middlewares/validateContactTokenHandler");
+const validateContactToken = require("../middlewares/validateTokenHandler");
 
 Router.post("/register", registerContact);
 Router.post("/login", loginContact);
