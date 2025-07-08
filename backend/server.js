@@ -1,14 +1,23 @@
-const express = require('express');
-const dotenv = require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const errorHandler = require("./middlewares/errorHandler");
+const connectDb = require("./config/dbConnection");
+const contactAuthRoutes = require("./routes/contactAuthRoutes");
+
+connectDb();
 
 const app = express();
 
-const PORT = process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
-app.get("/contact", (req, res) => {
-  res.send("Welcome to the Carthage Smart Backend!");
-});
+app.use(express.json());
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.use("/contacts", require("./routes/contactRoutes"));
+
+app.use("/contactauth", contactAuthRoutes);
+
+app.use(errorHandler);
+
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
 });

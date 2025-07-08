@@ -13,7 +13,7 @@ const validateContactToken = asyncHandler(async (req, res, next) => {
     try {
         // Verify the token using the secret key
       const decoded = jwt.verify(token, process.env.CONTACT_SECRET);
-      req.contact = { _id: decoded.id, ...decoded };
+      req.contact = { id: decoded.id, ...decoded };
       next();
     } catch (error) {
       res.status(401);
