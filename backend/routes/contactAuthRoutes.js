@@ -1,5 +1,8 @@
 const express = require("express");
-const Router = express.Router();
+const router = express.Router();
+
+const multer = require("multer");
+const path = require("path");
 
 const {
     registerContact,
@@ -9,8 +12,17 @@ const {
 
 const validateContactToken = require("../middlewares/validateTokenHandler");
 
-Router.post("/register", registerContact);
-Router.post("/login", loginContact);
-Router.get("/profile", validateContactToken, seeProfile);
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, "images"),
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
 
-module.exports = Router;
+const upload = multer({ storage });
+
+router.post("/register", upload.single("photo"), registerContact);
+router.post("/login", loginContact);
+router.get("/profile", validateContactToken, seeProfile);
+
+module.exports = router;

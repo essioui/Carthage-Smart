@@ -11,9 +11,14 @@ const registerContact = asyncHandler(async (req, res) => {
         user_name, CIN, password, passwordConfirm, address
      } = req.body;
 
-    if (!user_name || !CIN || !password || !passwordConfirm || !address) {
+    if (!user_name || !CIN || !password || !passwordConfirm || !address ) {
         res.status(400);
-        throw new Error("Please add all fields");
+        throw new Error("Please add all fields include photo");
+    }
+
+    if (!req.file) {
+        res.status(400);
+        throw new Error("Photo is required");
     }
 
     // Check if passwords match
@@ -37,6 +42,7 @@ const registerContact = asyncHandler(async (req, res) => {
         CIN,
         password: hashedPassword,
         address,
+        photo: req.file.path
     });
 
     console.log("Created contact:", contact);
@@ -54,6 +60,7 @@ const registerContact = asyncHandler(async (req, res) => {
             user_name: contact.user_name,
             CIN: contact.CIN,
             address: contact.address,
+            photo: contact.photo,
             token: token,
         });
     } else {

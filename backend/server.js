@@ -4,6 +4,8 @@ const errorHandler = require("./middlewares/errorHandler");
 const connectDb = require("./config/dbConnection");
 const contactAuthRoutes = require("./routes/contactAuthRoutes");
 
+const path = require("path");
+
 connectDb();
 
 const app = express();
@@ -17,6 +19,8 @@ app.use("/contacts", require("./routes/contactRoutes"));
 app.use("/contactauth", contactAuthRoutes);
 
 app.use("/users", require("./routes/userRoutes"));
+
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use(errorHandler);
 

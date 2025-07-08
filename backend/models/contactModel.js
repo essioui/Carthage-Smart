@@ -23,6 +23,10 @@ const contactSchema = mongoose.Schema({
     address: {
         type: String,
     },
+    photo: {
+        type: String,
+        required: [true, "Please add contact photo"],
+    },
 }, {
     timestamps: true
 }
