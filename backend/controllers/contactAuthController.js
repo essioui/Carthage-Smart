@@ -11,7 +11,7 @@ const registerContact = asyncHandler(async (req, res) => {
         user_name, CIN, password, passwordConfirm, address
      } = req.body;
 
-    if (!user_name || !CIN || !password || !passwordConfirm || !address ) {
+    if (!user_name || !CIN || !password || !address ) {
         res.status(400);
         throw new Error("Please add all fields include photo");
     }
@@ -19,12 +19,6 @@ const registerContact = asyncHandler(async (req, res) => {
     if (!req.file) {
         res.status(400);
         throw new Error("Photo is required");
-    }
-
-    // Check if passwords match
-    if (password !== passwordConfirm) {
-        res.status(400);
-        throw new Error("Passwords do not match");
     }
 
     const existingContact = await Contact.findOne({ CIN });

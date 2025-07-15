@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const errorHandler = require("./middlewares/errorHandler");
 const connectDb = require("./config/dbConnection");
 const contactAuthRoutes = require("./routes/contactAuthRoutes");
@@ -11,6 +12,8 @@ connectDb();
 const app = express();
 
 const port = process.env.PORT || 5000;
+
+app.use(cors());
 
 app.use(express.json());
 
