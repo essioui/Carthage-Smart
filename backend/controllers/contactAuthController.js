@@ -97,7 +97,7 @@ const loginContact = asyncHandler(async (req, res) => {
 });
 
 //@description Get contact profile
-//@route GET /contactauth/seeprofile
+//@route GET /contactauth/profile
 //@access Private
 const seeProfile = asyncHandler(async (req, res) => {
     const contact = await Contact.findById(req.contact.id).select("-password");
