@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const monthlyFacturationSchema = new mongoose.Schema({
   contact: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Contact",
+    ref: "contact",
     required: true
   },
   current_index: {

@@ -60,7 +60,7 @@ const addMonthlyReading = asyncHandler(async (req, res) => {
 });
 
 //@description Calculate monthly facturation
-//@route post /contactsauth/profile/facturation/calculate
+//@route post /contactauth/profile/facturation/calculate
 //@access Private
 const calculateFacturations = asyncHandler(async (req, res) => {
   const contactId = req.contact.id;

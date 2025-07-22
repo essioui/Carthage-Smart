@@ -4,6 +4,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const contact = require("../models/contactModel");
+const MonthlyFacturation = require("../models/monthlyFacturationModel");
+const fs = require('fs');
+const path = require('path');
+const { Parser } = require('json2csv');
+const { count } = require("console");
 
 // @description Register a User
 // @route POST /users/register
@@ -105,12 +110,54 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @access Private
 const currentUserInfo = asyncHandler(async (req, res) => {
     const userData = req.user;
-
-    const contacts = await contact.find().select("-password");
+    
+    const contacts = await contact.find().select("-password -photo");
 
     res.status(200).json({
         user: userData,
         contacts: contacts,
+    });
+});
+
+//@description Get all factures for all contacts and store in CSV
+//@route GET /users/factures
+//@access Private
+const getAllFactures = asyncHandler(async (req, res) => {
+    const userData = req.user;
+
+    const factures = await MonthlyFacturation.find()
+        .populate("contact", "user_name CIN")
+        .select("contact current_index difference total month year")
+        .sort({ createdAt: -1 });
+
+    const format = factures.map(facture => ({
+        contact: facture.contact.user_name,
+        CIN: facture.contact.CIN,
+        current_index: facture.current_index,
+        difference: facture.difference,
+        total: facture.total,
+        month: facture.month,
+        year: facture.year
+    }));
+
+    const fields = ['contact', 'CIN', 'current_index', 'difference', 'total', 'month', 'year'];
+    const opts = { fields };
+
+    const parser = new Parser(opts);
+    const csv = parser.parse(format);;
+
+    const filePath = path.join(__dirname, '../csv/factures.csv');
+
+    if (!fs.existsSync(path.dirname(filePath))) {
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    }
+
+    await fs.promises.writeFile(filePath, csv);
+
+    res.status(200).json({
+        message: "Factures retrieved and saved to CSV",
+        filePath,
+        count: factures.length
     });
 });
 
@@ -119,4 +166,5 @@ module.exports = {
     loginUser,
     getUserProfile,
     currentUserInfo,
+    getAllFactures
 };

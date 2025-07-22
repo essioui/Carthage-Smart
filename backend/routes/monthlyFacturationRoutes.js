@@ -11,10 +11,10 @@ const validateContactToken = require("../middlewares/validateTokenHandler");
 
 router.use(validateContactToken);
 
-router.post("/profile/facturation", addMonthlyReading);
+router.post("/", addMonthlyReading);
 
-router.get("/profile/facturation/calculate", calculateFacturations);
+router.post("/calculate", calculateFacturations);
 
-router.get("/profile/facturation/all", getAllFacturations);
+router.get("/all", getAllFacturations);
 
 module.exports = router;
