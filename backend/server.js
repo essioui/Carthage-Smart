@@ -4,8 +4,9 @@ const cors = require("cors");
 const errorHandler = require("./middlewares/errorHandler");
 const connectDb = require("./config/dbConnection");
 const contactAuthRoutes = require("./routes/contactAuthRoutes");
+const dailyRoutes = require("./routes/dailyRoutes");
 const validateContactToken = require("./middlewares/validateTokenHandler");
-const facturationRoutes = require("./routes/monthlyFacturationRoutes");
+const facturationRoutes = require("./routes/facturationRoutes");
 const path = require("path");
 
 connectDb();
@@ -20,7 +21,9 @@ app.use("/contacts", require("./routes/contactRoutes"));
 
 app.use("/contactauth", contactAuthRoutes);
 
-app.use("/contactauth/profile/facturation", facturationRoutes);
+app.use("/contactauth/profile", dailyRoutes);
+
+app.use("/contactauth/profile/facturation", require("./routes/facturationRoutes"));
 
 app.use("/users", require("./routes/userRoutes"));
 

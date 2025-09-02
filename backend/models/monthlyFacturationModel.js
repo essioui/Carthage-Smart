@@ -1,35 +1,14 @@
 const mongoose = require("mongoose");
 
-const monthlyFacturationSchema = new mongoose.Schema({
-  contact: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "contact",
-    required: true
+const monthlyFacturationSchema = mongoose.Schema(
+  {
+    contact: { type: mongoose.Schema.Types.ObjectId, ref: "Contact", required: true },
+    month: { type: Number, required: true },
+    year: { type: Number, required: true },
+    totalConsumption: { type: Number, required: true },
+    total: { type: Number },
   },
-  current_index: {
-    type: Number,
-    required: true
-  },
-  difference: {
-    type: Number,
-    default: 0
-  },
-  month: {
-    type: Number,
-    required: true,
-    min: 1,
-    max: 12
-  },
-  year: {
-    type: Number,
-    required: true
-  },
-  total: {
-    type: Number,
-    default: 0
-  }
-}, {
-  timestamps: true
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("MonthlyFacturation", monthlyFacturationSchema);
