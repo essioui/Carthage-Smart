@@ -1,12 +1,10 @@
 const express = require("express");
 const router = express.Router();
-
 const multer = require("multer");
 const path = require("path");
-
 const {
     registerContact,
-    loginContact,
+    loginContactByFace,
     seeProfile
 } = require("../controllers/contactAuthController");
 
@@ -22,7 +20,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post("/register", upload.single("photo"), registerContact);
-router.post("/login", loginContact);
+router.post("/login", loginContactByFace);
 router.get("/profile", validateContactToken, seeProfile);
 
 module.exports = router;

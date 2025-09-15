@@ -66,34 +66,40 @@ const registerContact = asyncHandler(async (req, res) => {
 //@description Login a contact
 //@route post /contacts/login
 //access public
-const loginContact = asyncHandler(async (req, res) => {
-    const { user_name, password } = req.body;
+const loginContactByFace = asyncHandler(async (req, res) => {
+    const { user_name, password, face_match } = req.body;
 
-    if (!user_name || !password ) {
-        res.status(400);
-        throw new Error("Please add all fields");
+    // If user_name and password are entered ==> traditional login
+    if (user_name && password) {
+        const contact = await Contact.findOne({ user_name });
+
+        if (contact && (await bcrypt.compare(password, contact.password))) {
+            const token = jwt.sign(
+                { id: contact._id },
+                process.env.CONTACT_SECRET,
+                { expiresIn: "30d" }
+            );
+
+            return res.json({
+                _id: contact.id,
+                user_name: contact.user_name,
+                CIN: contact.CIN,
+                token: token,
+            });
+        } else {
+            res.status(400);
+            throw new Error("Invalid credentials");
+        }
     }
 
-    const contact = await Contact.findOne({ user_name });
-
-    // Compare password and hash password
-    if (contact && (await bcrypt.compare(password, contact.password))) {
-        const token = jwt.sign(
-            { id: contact._id },
-            process.env.CONTACT_SECRET,
-            { expiresIn: "30d" }
-        );
-
-        res.json({
-            _id: contact.id,
-            user_name: contact.user_name,
-            CIN: contact.CIN,
-            token: token,
-        });
-    } else {
-        res.status(400);
-        throw new Error("Invalid credentials");
+    // If face_match arrives ==> Face login
+    if (face_match) {
+        const loginData = await loginContactByFace(face_match);
+        return res.json(loginData);
     }
+
+    res.status(400);
+    throw new Error("Please provide either username+password or face_match");
 });
 
 //@description Get contact profile
@@ -112,6 +118,6 @@ const seeProfile = asyncHandler(async (req, res) => {
 
 module.exports = {
     registerContact,
-    loginContact,
+    loginContactByFace,
     seeProfile
 };

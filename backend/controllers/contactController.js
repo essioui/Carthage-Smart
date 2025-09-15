@@ -1,8 +1,20 @@
 const asyncHandler = require("express-async-handler");
 const Contact = require("../models/contactModel");
 
+//@description get Contact
+//@route GET /contacts/:id
+//access private
+const getContact = asyncHandler(async (req, res) => {
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) {
+        res.status(404);
+        throw new Error("Contact not found");
+    }
+    res.status(200).json(contact);
+});
+
 //@description Update Contact
-//@route PUT /api/contacts/:id
+//@route PUT /contacts/:id
 //access private
 const updateContact = asyncHandler(async (req, res) => {
     const contact = await Contact.findById(req.params.id);
@@ -26,7 +38,7 @@ const updateContact = asyncHandler(async (req, res) => {
 });
 
 //@description Delete Contact
-//@route DELETE /api/contacts/:id
+//@route DELETE /contacts/:id
 //access private
 const deleteContact = asyncHandler(async (req, res) => {
     const contact = await Contact.findById(req.params.id);
@@ -46,6 +58,7 @@ const deleteContact = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+    getContact,
     updateContact,
-    deleteContact,
+    deleteContact
 };

@@ -1,15 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { 
-    addDailyConsumption,
-    getAllData
- } = require("../controllers/dailyController");
 const validateContactToken = require("../middlewares/validateTokenHandler");
+const { 
+    predictClient
+ } = require("../controllers/predictionController");
 
 router.use(validateContactToken);
 
-router.post("/daily", addDailyConsumption);
-
-router.get("/daily/export", getAllData);
+router.get("/", predictClient);
 
 module.exports = router;

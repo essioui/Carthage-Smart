@@ -3,6 +3,7 @@ const DailyConsumption = require("../models/dailyConsumptionModel");
 const MonthlyFacturation = require("../models/monthlyFacturationModel");
 const { spawn } = require("child_process");
 
+// Function to run the Python script and get monthly data
 const runPythonMonthly = (dailyData) => {
   return new Promise((resolve, reject) => {
     const python = spawn("python3", ["./scripts/monthlyFacturation.py"]);

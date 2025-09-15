@@ -1,2 +1,6 @@
 /node_modules
 /env
+/csv
+/users_plot
+/clients_plot
+/generalModels/plots

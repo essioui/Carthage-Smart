@@ -3,7 +3,8 @@ import json
 import pandas as pd
 
 if __name__ == "__main__":
-    input_data = json.load(sys.stdin)  # <<< read from stdin
+    # read from stdin
+    input_data = json.load(sys.stdin)
 
     df = pd.DataFrame(input_data)
     df['date'] = pd.to_datetime(df['date'])

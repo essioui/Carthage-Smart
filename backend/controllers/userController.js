@@ -119,45 +119,67 @@ const currentUserInfo = asyncHandler(async (req, res) => {
     });
 });
 
-//@description Get all factures for all contacts and store in CSV
-//@route GET /users/factures
-//@access Private
-const getAllFactures = asyncHandler(async (req, res) => {
-    const userData = req.user;
+// @description Get a contact by ID (read-only)
+// @route GET /users/contact/:id
+// @access Private
+const getContactById = asyncHandler(async (req, res) => {
+    const contactId = req.params.id;
 
-    const factures = await MonthlyFacturation.find()
-        .populate("contact", "user_name CIN")
-        .select("contact current_index difference total month year")
-        .sort({ createdAt: -1 });
+    // Check for ID validity
+    const contactData = await contact.findById(contactId).select("-password -photo");
 
-    const format = factures.map(facture => ({
-        contact: facture.contact.user_name,
-        CIN: facture.contact.CIN,
-        current_index: facture.current_index,
-        difference: facture.difference,
-        total: facture.total,
-        month: facture.month,
-        year: facture.year
-    }));
-
-    const fields = ['contact', 'CIN', 'current_index', 'difference', 'total', 'month', 'year'];
-    const opts = { fields };
-
-    const parser = new Parser(opts);
-    const csv = parser.parse(format);;
-
-    const filePath = path.join(__dirname, '../csv/factures.csv');
-
-    if (!fs.existsSync(path.dirname(filePath))) {
-        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    if (!contactData) {
+        return res.status(404).json({ error: "Contact not found" });
     }
 
-    await fs.promises.writeFile(filePath, csv);
+    res.status(200).json(contactData);
+});
+
+// @description Get last facture for each contact
+// @route GET /users/factures
+// @access Private
+const getAllFactures = asyncHandler(async (req, res) => {
+
+    // ggregate to get the latest bill for each contact
+    const factures = await MonthlyFacturation.aggregate([
+        { $sort: { contact: 1, createdAt: -1 } },
+        {
+            $group: {
+                _id: "$contact",
+                contact: { $first: "$contact" },
+                total: { $first: "$total" },
+                totalConsumption: { $first: "$totalConsumption" },
+                month: { $first: "$month" },
+                year: { $first: "$year" },
+                createdAt: { $first: "$createdAt" }
+            }
+        },
+        {
+            $lookup: {
+                from: "contacts",
+                localField: "contact",
+                foreignField: "_id",
+                as: "contactInfo"
+            }
+        },
+        { $unwind: "$contactInfo" },
+        {
+            $project: {
+                _id: 1,
+                contact: "$contactInfo.user_name",
+                total: 1,
+                totalConsumption: 1,
+                month: 1,
+                year: 1
+            }
+        },
+        // Sort by name
+        { $sort: { contact: 1 } }
+    ]);
 
     res.status(200).json({
-        message: "Factures retrieved and saved to CSV",
-        filePath,
-        count: factures.length
+        count: factures.length,
+        factures
     });
 });
 
@@ -166,5 +188,6 @@ module.exports = {
     loginUser,
     getUserProfile,
     currentUserInfo,
+    getContactById,
     getAllFactures
 };
