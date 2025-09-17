@@ -38,6 +38,11 @@ const errorHandler = (err, req, res, next) => {
             });
             break;
         default:
+            res.status(statusCode).json({
+                title: "Unknown Error",
+                message: err.message,
+                stackTrace: err.stack
+        });
             console.log(("No error, All good"));
             break;
     }

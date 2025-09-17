@@ -31,11 +31,20 @@ app.use("/contactauth", contactAuthRoutes);
 
 app.use("/contactauth/profile", dailyRoutes);
 
-app.use("/contactauth/profile/facturation", require("./routes/facturationRoutes"));
+app.use(
+  "/contactauth/profile/facturation",
+  require("./routes/facturationRoutes")
+);
 
-app.use("/contactauth/profile/facturation/predict", require("./routes/predictionRoutes"));
+app.use(
+  "/contactauth/profile/facturation/predict",
+  require("./routes/predictionRoutes")
+);
 
-app.use("/contactauth/profile/facturation/show", require("./routes/predictionRoutes"));
+app.use(
+  "/contactauth/profile/facturation/show",
+  require("./routes/predictionRoutes")
+);
 
 app.use("/users", require("./routes/userRoutes"));
 
@@ -49,10 +58,13 @@ app.use("/users/data", userContactRoutes);
 
 app.use("/users/analyse", userInfoDataRoutes);
 
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use("/images", express.static(path.join(__dirname, "images")));
+
+// Serve clients_plot folder directly
+app.use("/clients_plot", express.static(path.join(__dirname, "clients_plot")));
 
 app.use(errorHandler);
 
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });

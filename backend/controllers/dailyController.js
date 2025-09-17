@@ -1,11 +1,10 @@
 const asyncHandler = require("express-async-handler");
-const DailyConsumption = require("../models/dailyConsumptionModel");
 const fs = require("fs");
 const path = require("path");
 
-//@description Save daily consumption
-//@route POST /contactauth/profile/daily
-//@access Private
+// @desc Add daily consumption (append to CSV file)
+// @route POST /contactauth/profile/daily
+// @access Private
 const addDailyConsumption = asyncHandler(async (req, res) => {
   const { consumption, date } = req.body;
   const contactId = req.contact.id;
@@ -17,64 +16,50 @@ const addDailyConsumption = asyncHandler(async (req, res) => {
 
   const dateObj = date ? new Date(date) : new Date();
 
-  const existing = await DailyConsumption.findOne({ contact: contactId, date: dateObj });
-  if (existing) {
-    res.status(400);
-    throw new Error("Consumption for this day already exists");
+  // create CSV directory if not exists
+  const csvDir = path.join(__dirname, "../csv/contacts");
+  if (!fs.existsSync(csvDir)) fs.mkdirSync(csvDir, { recursive: true });
+
+  const filePath = path.join(csvDir, `${contactId}.csv`);
+
+  // headers if file doesn't exist
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, "date,consumption\n");
   }
 
-  const newDaily = await DailyConsumption.create({
-    contact: contactId,
-    date: dateObj,
-    consumption,
-  });
+  // add new line
+  const line = `${dateObj.toISOString().split("T")[0]},${consumption}\n`;
+  fs.appendFileSync(filePath, line);
 
-  res.status(201).json(newDaily);
+  res.status(201).json({ message: "Daily consumption saved", file: filePath });
 });
 
-// @desc Export daily consumption of the logged-in user to CSV
+// @desc Get all daily consumption from CSV file
 // @route GET /contactauth/profile/daily/export
 // @access Private
 const getAllData = asyncHandler(async (req, res) => {
   const contactId = req.contact.id;
 
-  // Fetch all user data and sort it by date
-  const dailyDocs = await DailyConsumption.find({ contact: contactId }).sort({ date: 1 });
+  const filePath = path.join(__dirname, "../csv/contacts", `${contactId}.csv`);
 
-  if (!dailyDocs.length) {
-    return res.status(404).json({ message: "No daily consumption data found for this user" });
+  if (!fs.existsSync(filePath)) {
+    return res
+      .status(404)
+      .json({ message: "No daily consumption file found for this user" });
   }
 
-  // Make sure the csv folder exists
-  const csvDir = path.join(__dirname, "../csv/contacts");
-  
-  if (!fs.existsSync(csvDir)) fs.mkdirSync(csvDir, { recursive: true });
-
-
-  const filePath = path.join(csvDir, `${contactId}.csv`);
-  const ws = fs.createWriteStream(filePath);
-
-  // Header writing
-  ws.write("date,consumption\n");
-
-  // Data entry
-  for (const doc of dailyDocs) {
-    ws.write(`${doc.date.toISOString().split("T")[0]},${doc.consumption}\n`);
-  }
-
-  ws.end();
-
-  ws.on("finish", () => {
-    res.json({ message: "Your daily consumption exported to CSV successfully", file: filePath });
+  // read and parse CSV
+  const content = fs.readFileSync(filePath, "utf-8");
+  const rows = content.trim().split("\n").slice(1);
+  const data = rows.map((row) => {
+    const [date, consumption] = row.split(",");
+    return { date, consumption: Number(consumption) };
   });
 
-  ws.on("error", (err) => {
-    console.error("CSV write error:", err);
-    res.status(500).json({ message: "Failed to write CSV file" });
-  });
+  res.json({ message: "Daily consumption data retrieved", data });
 });
 
-module.exports = { 
+module.exports = {
   addDailyConsumption,
-  getAllData, 
+  getAllData,
 };

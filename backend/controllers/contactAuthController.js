@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const Contact = require("../models/contactModel");
 
 //@description Register a contact
-//@route post /contacts/register
+//@route post /contactauth/register
 //access public
 const registerContact = asyncHandler(async (req, res) => {
     const { 
@@ -64,7 +64,7 @@ const registerContact = asyncHandler(async (req, res) => {
 });
 
 //@description Login a contact
-//@route post /contacts/login
+//@route post /contactauth/login
 //access public
 const loginContactByFace = asyncHandler(async (req, res) => {
     const { user_name, password, face_match } = req.body;

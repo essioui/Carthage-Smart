@@ -6,9 +6,6 @@ const Contact = require("../models/contactModel");
 
 const scriptPath = path.join(__dirname, "../scripts/face_recognize.py");
 
-//@description Recognize face and authenticate contact
-//@route POST /face/recognize
-//access public
 const recognizeFace = asyncHandler(async (req, res) => {
   const { source } = req.body;
   if (!source) throw new Error("Please provide a source");
@@ -26,11 +23,7 @@ const recognizeFace = asyncHandler(async (req, res) => {
 
     if (!contact) return res.status(400).json({ error: "Face not recognized" });
 
-    const token = jwt.sign(
-      { id: contact._id },
-      process.env.CONTACT_SECRET,
-      { expiresIn: "30d" }
-    );
+    const token = jwt.sign({ id: contact._id }, process.env.CONTACT_SECRET, { expiresIn: "30d" });
 
     return res.json({
       _id: contact._id,

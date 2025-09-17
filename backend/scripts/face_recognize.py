@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import sys
 import os
-import cv2
+import cv2, base64
 import numpy as np
 import face_recognition
 import requests
 import json
+from PIL import Image
+from io import BytesIO
 
 # The folder containing the stored images for comparison
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,29 +16,34 @@ LOCAL_FOLDER = os.path.join(PROJECT_DIR, "images")
 def load_input_image(source: str):
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    if source.startswith("http://") or source.startswith("https://"):
+    if source.startswith("data:image"):
+        header, base64_data = source.split(",", 1)
+        img_data = base64.b64decode(base64_data)
+        img = np.array(Image.open(BytesIO(img_data)))
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    elif source.startswith("http://") or source.startswith("https://"):
         response = requests.get(source)
         image_array = np.asarray(bytearray(response.content), dtype=np.uint8)
-        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
 
     elif source.lower() == "camera":
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
-            raise ValueError("The camera is not opened")
+            raise ValueError("Camera not opened")
         ret, frame = cap.read()
         cap.release()
         if not ret:
-            raise ValueError("The photo was not taken by the camera")
-        image = frame
+            raise ValueError("Photo not taken")
+        img = frame
 
     else:
-        # Image from a local file relative to where face_recognize.py is located
         image_path = os.path.join(SCRIPT_DIR, source)
-        image = cv2.imread(image_path)
+        img = cv2.imread(image_path)
 
-    if image is None:
+    if img is None:
         raise ValueError("Image not loaded")
-    return image
+    return img
 
 
 def find_best_match(image):
