@@ -7,7 +7,7 @@ function UploadCSV() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) {
-      setMessage("Please select a file");
+      setMessage("Please select a CSV file to upload.");
       return;
     }
 
@@ -15,36 +15,45 @@ function UploadCSV() {
     formData.append("file", file);
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setMessage("No token found. Please login first.");
+        return;
+      }
+
       const res = await fetch(
         "http://localhost:5001/contactauth/profile/daily",
         {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: formData,
         }
       );
 
       const data = await res.json();
       if (res.ok) {
-        setMessage("ok " + data.message);
+        setMessage(`Success: ${data.message}`);
         setFile(null);
       } else {
-        setMessage("no " + (data.message || "Failed to upload"));
+        setMessage(`Error: ${data.message || "Upload failed"}`);
       }
     } catch (err) {
       console.error(err);
-      setMessage("Network error");
+      setMessage("Network error. Check server and CORS.");
     }
   };
 
   return (
-    <div className="p-4 bg-gray-700 rounded w-2/3 mx-auto mt-6">
-      <h2 className="text-xl font-bold mb-4">Upload CSV</h2>
+    <div className="p-4 bg-gray-700 rounded w-2/3 mx-auto mt-6 text-white">
+      <h2 className="text-xl font-bold mb-4">Upload Daily Consumption CSV</h2>
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
         <input
           type="file"
           accept=".csv"
           onChange={(e) => setFile(e.target.files[0])}
-          className="border px-2 py-1 rounded"
+          className="border px-2 py-1 rounded text-black"
         />
         <button
           type="submit"

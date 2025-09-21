@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const validateContactToken = require("../middlewares/validateTokenHandler");
-const { 
-    getMonthlyDataPython,
-    calculateMonthlyFacture, 
-    getAllFactures
+const {
+  getMonthlyDataPython,
+  calculateMonthlyFacture,
+  getAllFactures,
 } = require("../controllers/facturationController");
 
 router.use(validateContactToken);

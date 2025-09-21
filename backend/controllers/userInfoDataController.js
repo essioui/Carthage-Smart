@@ -5,7 +5,10 @@ const fs = require("fs");
 // Function to call the Python script and analyze the CSV
 function analyzeCSV(filePath) {
   return new Promise((resolve, reject) => {
-    const scriptPath = path.join(__dirname, "../scripts/analyze_consumption.py");
+    const scriptPath = path.join(
+      __dirname,
+      "../scripts/analyze_consumption.py"
+    );
 
     execFile("python3", [scriptPath, filePath], (error, stdout, stderr) => {
       if (error) {
@@ -32,11 +35,13 @@ function analyzeCSV(filePath) {
 // Route: GET /users/analyse
 // Access: Private
 const analyseUsers = async (req, res) => {
-  const { address } = req.body;
-  if (!address) return res.status(400).json({ error: "address is required in body" });
+  const { address } = req.query;
+  if (!address)
+    return res.status(400).json({ error: "address is required in query" });
 
   const csvPath = path.join(__dirname, `../csv/userData/${address}.csv`);
-  if (!fs.existsSync(csvPath)) return res.status(404).json({ error: "CSV file not found" });
+  if (!fs.existsSync(csvPath))
+    return res.status(404).json({ error: "CSV file not found" });
 
   try {
     const result = await analyzeCSV(csvPath);

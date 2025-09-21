@@ -5,6 +5,7 @@ import FacturationCalculate from "./Factures/FacturationCalculate";
 import FacturationAll from "./Factures/FacturationAll";
 import FacturationPredict from "./Factures/FacturationPredict";
 import FacturationShow from "./Factures/FacturationShow";
+import DailyForm from "./DailyForm";
 
 function Facturation() {
   return (
@@ -12,6 +13,7 @@ function Facturation() {
       {/* Nested routes */}
       <Routes>
         <Route index element={<FacturationHome />} />
+        <Route path="daily" element={<DailyForm />} />
         <Route path="monthly" element={<FacturationMonthly />} />
         <Route path="calculate" element={<FacturationCalculate />} />
         <Route path="all" element={<FacturationAll />} />

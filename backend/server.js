@@ -46,6 +46,11 @@ app.use(
   require("./routes/predictionRoutes")
 );
 
+app.use(
+  "/contactauth/profile/facturation/weather",
+  require("./routes/weatherRoutes")
+);
+
 app.use("/users", require("./routes/userRoutes"));
 
 app.use("/users/cluster", require("./routes/userClusterRoutes"));
@@ -60,7 +65,6 @@ app.use("/users/analyse", userInfoDataRoutes);
 
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-// Serve clients_plot folder directly
 app.use("/clients_plot", express.static(path.join(__dirname, "clients_plot")));
 
 app.use(errorHandler);

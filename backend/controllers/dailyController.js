@@ -1,54 +1,52 @@
 const asyncHandler = require("express-async-handler");
 const fs = require("fs");
 const path = require("path");
+const DailyConsumption = require("../models/dailyConsumptionModel");
 
-// @desc Add daily consumption (append to CSV file)
+// @desc Add daily consumption from CSV to MongoDB
 // @route POST /contactauth/profile/daily
 // @access Private
 const addDailyConsumption = asyncHandler(async (req, res) => {
-  const { consumption, date } = req.body;
-  const contactId = req.contact.id;
-
-  if (consumption === undefined || isNaN(consumption)) {
+  if (!req.file) {
     res.status(400);
-    throw new Error("Please provide a valid consumption value");
+    throw new Error("No CSV file uploaded");
   }
 
-  const dateObj = date ? new Date(date) : new Date();
+  const contactId = req.contact.id;
+  const content = fs.readFileSync(req.file.path, "utf-8");
+  const rows = content.trim().split("\n").slice(1);
 
-  // create CSV directory if not exists
-  const csvDir = path.join(__dirname, "../csv/contacts");
-  if (!fs.existsSync(csvDir)) fs.mkdirSync(csvDir, { recursive: true });
+  const dailyRecords = rows.map((row) => {
+    const [date, consumption] = row.split(",");
+    return {
+      contact: contactId,
+      date: new Date(date),
+      consumption: Number(consumption),
+    };
+  });
 
-  const filePath = path.join(csvDir, `${contactId}.csv`);
-
-  // headers if file doesn't exist
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, "date,consumption\n");
+  try {
+    await DailyConsumption.insertMany(dailyRecords);
+    res
+      .status(201)
+      .json({ message: "Daily CSV data saved", count: dailyRecords.length });
+  } catch (err) {
+    console.error("MongoDB insert error:", err);
+    res.status(500).json({ message: "Error saving to DB", error: err });
   }
-
-  // add new line
-  const line = `${dateObj.toISOString().split("T")[0]},${consumption}\n`;
-  fs.appendFileSync(filePath, line);
-
-  res.status(201).json({ message: "Daily consumption saved", file: filePath });
 });
 
-// @desc Get all daily consumption from CSV file
-// @route GET /contactauth/profile/daily/export
+// @desc Get all daily consumption data
+// @route GET /contactauth/profile/daily
 // @access Private
 const getAllData = asyncHandler(async (req, res) => {
   const contactId = req.contact.id;
-
   const filePath = path.join(__dirname, "../csv/contacts", `${contactId}.csv`);
 
   if (!fs.existsSync(filePath)) {
-    return res
-      .status(404)
-      .json({ message: "No daily consumption file found for this user" });
+    return res.status(404).json({ message: "No daily consumption file found" });
   }
 
-  // read and parse CSV
   const content = fs.readFileSync(filePath, "utf-8");
   const rows = content.trim().split("\n").slice(1);
   const data = rows.map((row) => {
@@ -56,10 +54,7 @@ const getAllData = asyncHandler(async (req, res) => {
     return { date, consumption: Number(consumption) };
   });
 
-  res.json({ message: "Daily consumption data retrieved", data });
+  res.json({ message: "Daily consumption retrieved", data });
 });
 
-module.exports = {
-  addDailyConsumption,
-  getAllData,
-};
+module.exports = { addDailyConsumption, getAllData };

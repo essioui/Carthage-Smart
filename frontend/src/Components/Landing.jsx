@@ -10,6 +10,7 @@ import Profile from "../pages/Profile";
 import DailyForm from "../pages/DailyForm";
 import DailyList from "../pages/DailyList";
 import Facturation from "../pages/Facturation";
+import ProfileAdmins from "../pages/ProfileAdmins";
 
 function Landing() {
   return (
@@ -27,6 +28,7 @@ function Landing() {
             path="/Clients/profile/facturation/*"
             element={<Facturation />}
           />
+          <Route path="/Admins/profileAdmins/*" element={<ProfileAdmins />} />
 
           <Route path="/Admins" element={<Admin />} />
           <Route path="/Admins/register" element={<RegisterAdmin />} />

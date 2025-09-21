@@ -9,7 +9,6 @@ import json
 from PIL import Image
 from io import BytesIO
 
-# The folder containing the stored images for comparison
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCAL_FOLDER = os.path.join(PROJECT_DIR, "images") 
 

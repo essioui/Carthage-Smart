@@ -4,6 +4,13 @@ import { Link } from "react-router-dom";
 function FacturationHome() {
   const facturationCards = [
     {
+      title: "Daily",
+      description: "Add or view your daily electricity consumption.",
+      icon: "📆",
+      link: "daily",
+      color: "bg-teal-600",
+    },
+    {
       title: "Monthly",
       description: "View your total consumption and invoices for each month.",
       icon: "📅",

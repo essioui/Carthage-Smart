@@ -3,7 +3,6 @@ import json
 import pandas as pd
 
 if __name__ == "__main__":
-    # read from stdin
     input_data = json.load(sys.stdin)
 
     df = pd.DataFrame(input_data)
