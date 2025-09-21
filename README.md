@@ -67,7 +67,7 @@ It combines MERN Stack (MongoDB, Express, React, Node.js) with Python AI models 
 
 ### Clients Dashboard
 
-![Admin Dashboard](images/clientsDashboard.png)
+![Admin Dashboard](images/clientsDashboard.jpeg)
 
 ### LSTM Model Flow
 
