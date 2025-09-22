@@ -9,7 +9,7 @@ It combines MERN Stack (MongoDB, Express, React, Node.js) with Python AI models 
 
 ## Architecture
 
-![Architecture Diagram](images/architecture.png)
+![Architecture Diagram](images/architecture.drawio.png)
 
 **Flow:**
 
