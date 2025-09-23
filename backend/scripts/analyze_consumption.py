@@ -5,7 +5,6 @@ Analyze consumption from a CSV file and return JSON with:
 - List of contactIds below 25%
 - List of contactIds above 75%
 """
-
 import sys
 import json
 import pandas as pd
