@@ -9,7 +9,7 @@ import sys
 import json
 import pandas as pd
 
-def analyze_csv(file_path: str):
+def analyze_csv(file_path):
     df = pd.read_csv(file_path)
 
     description = df["totalConsumption"].describe().to_dict()
