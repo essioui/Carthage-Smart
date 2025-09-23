@@ -68,6 +68,7 @@ def find_best_match(image):
         local_encodings = face_recognition.face_encodings(local_img)
         if len(local_encodings) == 0:
             continue
+        
         for local_encoding in local_encodings:
             distance = face_recognition.face_distance([local_encoding], input_encoding)[0]
             if distance < min_distance:
