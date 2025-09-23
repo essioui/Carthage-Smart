@@ -12,7 +12,7 @@ from io import BytesIO
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCAL_FOLDER = os.path.join(PROJECT_DIR, "images") 
 
-def load_input_image(source: str):
+def load_input_image(source):
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
     if source.startswith("data:image"):
