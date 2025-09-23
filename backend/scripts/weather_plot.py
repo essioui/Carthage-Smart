@@ -17,7 +17,7 @@ locations = {
     "Marsa": (51.4875, -0.1687, 5),
 }
 
-def plot_weather(place: str, csv_path: str):
+def plot_weather(place, csv_path):
     if place not in locations:
         raise ValueError("Unknown place")
 
