@@ -46,8 +46,6 @@ train = scaled_data[:train_size]
 test = scaled_data[train_size:train_size+test_size]
 evaluate = scaled_data[train_size+test_size:]
 
-print(f"Train shape: {train.shape}, Test shape: {test.shape}, Evaluate shape: {evaluate.shape}")
-
 window_size = 180
 forecast_horizon = 60
 
@@ -68,11 +66,6 @@ def create_X_y(data, window_size, forecast_horizon):
 X_train, y_train = create_X_y(train, window_size, forecast_horizon)
 X_test, y_test = create_X_y(test, window_size, forecast_horizon)
 X_eval, y_eval = create_X_y(evaluate, window_size, forecast_horizon)
-
-print("X_train shape:", X_train.shape)
-print("y_train shape:", y_train.shape)
-print("X_test shape:", X_test.shape)
-print("X_eval shape:", X_eval.shape)
 
 model = Sequential([
     LSTM(128, activation='tanh', return_sequences=True, input_shape=(window_size, 3)),
@@ -108,7 +101,6 @@ else:
     )
 
 model.save("lstm_consumption_model.keras")
-print("Model saved successfully as lstm_consumption_model.keras")
 
 if X_eval.size > 0:
     loss, mae = model.evaluate(X_eval, y_eval)
