@@ -16,7 +16,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 from tensorflow.keras.models import load_model
 
 
-def predict_user_consumption(user_df: pd.DataFrame, window_size: int = 180, output_days: int = 90):
+def predict_user_consumption(user_df, window_size = 180, output_days= 90):
     features = ["consumption", "tmin", "tmax"]
 
     scaler_path = os.path.join(os.path.dirname(__file__), "../generalModels/scaler.save")
@@ -50,7 +50,7 @@ def predict_user_consumption(user_df: pd.DataFrame, window_size: int = 180, outp
     return preds_rescaled
 
 
-def build_results(user_df: pd.DataFrame, predictions: np.ndarray) -> dict:
+def build_results(user_df, predictions):
     last_date = user_df["date"].max()
     future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=len(predictions))
     predicted_dict = {d.strftime("%Y-%m-%d"): float(v) for d, v in zip(future_dates, predictions)}
@@ -60,7 +60,7 @@ def build_results(user_df: pd.DataFrame, predictions: np.ndarray) -> dict:
     }
 
 
-def save_plot(user_df: pd.DataFrame, predictions: np.ndarray, csv_path: str, window_size: int = 180, output_dir="users_plot"):
+def save_plot(user_df, predictions, csv_path, window_size = 180, output_dir="users_plot"):
     os.makedirs(output_dir, exist_ok=True)
     plt.figure(figsize=(14, 8))
 
