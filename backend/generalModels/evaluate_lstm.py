@@ -64,6 +64,8 @@ def create_X_y(data, window_size, forecast_horizon):
     return X, y
 
 X_train, y_train = create_X_y(train, window_size, forecast_horizon)
+print("Xtrain", X_train)
+print("ytrain", y_train.shape)
 X_test, y_test = create_X_y(test, window_size, forecast_horizon)
 X_eval, y_eval = create_X_y(evaluate, window_size, forecast_horizon)
 
