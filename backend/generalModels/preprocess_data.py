@@ -12,15 +12,14 @@ print(df.columns)
 df = df.rename(columns={'KWH/hh (per half hour) ': 'consumption',
                         'DateTime': 'date'
                         })
-print(df.head())
 
-df['date'] = pd.to_datetime(df['date'].str.strip(), errors='coerce')
-# ==> convert to datetime and strip any whitespace and NaT to NaT
+df['date'] = pd.to_datetime(df['date'])
+# ==> convert to datetime
 
-df['consumption'] = pd.to_numeric(df['consumption'].str.strip(), errors='coerce')
-# ==> convert to numeric and strip any whitespace and NaN to NaN
+df['consumption'] = df['consumption'].str.strip().replace("Null", 0).astype(float)
+# ==> remove whitespace, replace "Null" with 0, convert to float
 
-print(df.dtypes)
+print(df.columns)
 # ==> Index(['date', 'KWH'], dtype='object')
 
 df.set_index('date', inplace=True)
@@ -29,38 +28,38 @@ df.set_index('date', inplace=True)
 df = df.resample('D').sum()
 # ==> convert half-hour to daily
 
-print(df.head())
-
 start_date = df.index.min()
-# ==> first date from csv: 2012-04-25 
+# ==> start date of csv: 2012-04-25
 
-last_date = df.index.max()
-# ==> last date from csv: 2014-02-28 
+end_date = df.index.max()
+# ==> end date of csv: 2014-02-28
 
 chelsea = Point(51.4875, -0.1687)
-# ==> location of Chelsea
+# ==> location of Chelsea (for example place from london)
 
-data = Daily(chelsea, start_date, last_date).fetch()
-# ==> fetch daily data from meteostat with cols:tavg  tmin  tmax  prcp  snow  wdir  wspd  wpgt    pres  tsun
+data = Daily(chelsea, start_date, end_date).fetch()
+# ==> fetch daily weather data from meteostat
 
-data = data[['tavg', 'tmin', 'tmax', 'prcp', 'wspd']]
-# ==> choose just clos: tavg  tmin  tmax  prcp  wspd
+print(data.columns)
+# ==> Index(['tavg', 'tmin', 'tmax', 'prcp', 'snow', 'wdir', 'wspd', 'wpgt', 'pres', 'tsun'], dtype='object')
 
-df = df.reset_index()
-# ==> reset index to column (for merge later)
+data = data[["tavg", "tmin", "tmax", "prcp", "wspd"]]
+print(data.columns)
+# ==> Index(['tavg', 'tmin', 'tmin', 'prcp', 'wspd'], dtype='object')
 
 data = data.reset_index()
-# ==> reset index to column (for merge later)
+# ==> reset the index to column (time)
 
 data = data.rename(columns={'time': 'date'})
-# ==> rename time to date
+# ==> rename time to date for preprocess to merge
 
-merge_data = pd.merge(df, data, on='date', how='inner')
+df = df.reset_index()
 
-merge_data = merge_data.set_index('date')
+merged_files = pd.merge(df, data, on='date', how='inner')
+# ==> merge 2 tables df and data by same column date with type inner join
 
-merge_data.to_csv('processed_data.csv')
+merged_files = merged_files[['date', 'consumption', 'tavg', 'tmin', 'tmax']]
+# ==> just the columns i used
 
-print(merge_data.head())
-
-print(merge_data.tail())
+merged_files.to_csv("newData.csv")
+# ==> save to csv file
