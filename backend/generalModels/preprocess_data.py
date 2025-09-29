@@ -61,5 +61,8 @@ merged_files = pd.merge(df, data, on='date', how='inner')
 merged_files = merged_files[['date', 'consumption', 'tavg', 'tmin', 'tmax']]
 # ==> just the columns i used
 
+merged_files = merged_files.fillna(merged_files.mean(numeric_only=True))
+# ==> change NaN by mean of column
+
 merged_files.to_csv("newData.csv")
 # ==> save to csv file

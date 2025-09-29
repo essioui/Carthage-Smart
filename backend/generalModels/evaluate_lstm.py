@@ -8,7 +8,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
-import json
 import joblib
 
 plots_dir = "plots"
@@ -39,15 +38,21 @@ joblib.dump(scaler, "scaler.save")
 
 n = len(scaled_data)
 train_size = int(n * 0.7)
-test_size = int(n * 0.15)
-evaluate_size = n - train_size - test_size
+evaluate_size = n - train_size
 
 train = scaled_data[:train_size]
-test = scaled_data[train_size:train_size+test_size]
-evaluate = scaled_data[train_size+test_size:]
+evaluate = scaled_data[train_size:]
+
+val_split = 0.2
+val_size = int(len(train) * val_split)
 
 window_size = 180
 forecast_horizon = 60
+if val_size < window_size + forecast_horizon:
+    val_size = window_size + forecast_horizon
+
+train_data = train[:-val_size]
+val_data = train[-val_size:]
 
 def create_X_y(data, window_size, forecast_horizon):
     if len(data) < window_size + forecast_horizon:
@@ -63,11 +68,16 @@ def create_X_y(data, window_size, forecast_horizon):
     y = y.reshape((y.shape[0], y.shape[1]*y.shape[2]))
     return X, y
 
-X_train, y_train = create_X_y(train, window_size, forecast_horizon)
-print("Xtrain", X_train)
-print("ytrain", y_train.shape)
-X_test, y_test = create_X_y(test, window_size, forecast_horizon)
+X_train, y_train = create_X_y(train_data, window_size, forecast_horizon)
+X_val, y_val = create_X_y(val_data, window_size, forecast_horizon)
 X_eval, y_eval = create_X_y(evaluate, window_size, forecast_horizon)
+
+print("X_train:", X_train.shape)
+print("y_train:", y_train.shape)
+print("X_val:", X_val.shape)
+print("y_val:", y_val.shape)
+print("X_eval:", X_eval.shape)
+print("y_eval:", y_eval.shape)
 
 model = Sequential([
     LSTM(128, activation='tanh', return_sequences=True, input_shape=(window_size, 3)),
@@ -86,21 +96,13 @@ early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6)
 callbacks = [early_stop, reduce_lr]
 
-if X_test.size > 0:
-    history = model.fit(
-        X_train, y_train,
-        validation_data=(X_test, y_test),
-        epochs=100,
-        batch_size=32,
-        callbacks=callbacks
-    )
-else:
-    history = model.fit(
-        X_train, y_train,
-        epochs=100,
-        batch_size=32,
-        callbacks=callbacks
-    )
+history = model.fit(
+    X_train, y_train,
+    validation_data=(X_val, y_val),
+    epochs=100,
+    batch_size=32,
+    callbacks=callbacks
+)
 
 model.save("lstm_consumption_model.keras")
 
