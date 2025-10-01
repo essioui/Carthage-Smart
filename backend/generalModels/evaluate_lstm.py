@@ -2,35 +2,26 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from statsmodels.tsa.seasonal import seasonal_decompose
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
 import joblib
+import itertools
 
 plots_dir = "plots"
 os.makedirs(plots_dir, exist_ok=True)
 
 df = pd.read_csv("evaluate.csv")
-features = ['consumption', 'tmin', 'tmax']
+df['date'] = pd.to_datetime(df['date'])
+
+df['days_week'] = df['date'].dt.dayofweek
+df['days_month'] = df['date'].dt.month
+df['days_year'] = df['date'].dt.dayofyear
+
+features = ['consumption', 'tmin', 'tmax', 'days_week', 'days_month', 'days_year']
 df_selected = df[features]
-
-plt.figure(figsize=(12,6))
-df_selected.plot()
-plt.xlabel("Index")
-plt.ylabel("Values")
-plt.title("Consumption, Tmin, Tmax Over Time")
-plt.savefig(os.path.join(plots_dir, "original_data.png"))
-plt.close()
-
-result = seasonal_decompose(df_selected['consumption'], model='additive', period=365)
-plt.figure()
-result.plot()
-plt.suptitle('Consumption Decomposition')
-plt.savefig(os.path.join(plots_dir, "seasonal_decompose.png"))
-plt.close()
 
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(df_selected)
@@ -46,8 +37,8 @@ evaluate = scaled_data[train_size:]
 val_split = 0.2
 val_size = int(len(train) * val_split)
 
-window_size = 180
-forecast_horizon = 60
+window_size = 120
+forecast_horizon = 30
 if val_size < window_size + forecast_horizon:
     val_size = window_size + forecast_horizon
 
@@ -55,18 +46,14 @@ train_data = train[:-val_size]
 val_data = train[-val_size:]
 
 def create_X_y(data, window_size, forecast_horizon):
-    if len(data) < window_size + forecast_horizon:
-        print(f"Data too small ({len(data)}) for window_size={window_size} and forecast_horizon={forecast_horizon}")
-        return np.array([]), np.array([])
     X_list = []
     y_list = []
     for i in range(len(data) - window_size - forecast_horizon + 1):
         X_list.append(data[i:i+window_size])
-        y_list.append(data[i+window_size:i+window_size+forecast_horizon])
+        y_list.append(data[i+window_size:i+window_size+forecast_horizon, 0])
     X = np.array(X_list)
     y = np.array(y_list)
-    y = y.reshape((y.shape[0], y.shape[1]*y.shape[2]))
-    return X, y
+    return X, y 
 
 X_train, y_train = create_X_y(train_data, window_size, forecast_horizon)
 X_val, y_val = create_X_y(val_data, window_size, forecast_horizon)
@@ -79,51 +66,82 @@ print("y_val:", y_val.shape)
 print("X_eval:", X_eval.shape)
 print("y_eval:", y_eval.shape)
 
-model = Sequential([
-    LSTM(128, activation='tanh', return_sequences=True, input_shape=(window_size, 3)),
-    Dropout(0.2),
-    LSTM(64, activation='tanh', return_sequences=True),
-    Dropout(0.2),
-    LSTM(32, activation='tanh'),
-    Dense(forecast_horizon*3)
-])
+grid_random = {
+    "unit1": [128, 256],
+    "unit2": [64, 128],
+    "unit3": [32, 64],
+    "dropout": [0.2, 0.3],
+    "lr": [0.01, 0.005]
+}
 
-optimizer = Adam(learning_rate=0.001)
-model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
-model.summary()
+all_grid = list(itertools.product(
+    grid_random["unit1"],
+    grid_random["unit2"],
+    grid_random["unit3"],
+    grid_random["dropout"],
+    grid_random["lr"]
+))
 
-early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6)
-callbacks = [early_stop, reduce_lr]
+best_val_loss = float("inf")
+best_params = None
 
-history = model.fit(
-    X_train, y_train,
-    validation_data=(X_val, y_val),
-    epochs=100,
-    batch_size=32,
-    callbacks=callbacks
-)
+for (u1, u2, u3, d, lr) in all_grid:
 
-model.save("lstm_consumption_model.keras")
+    model = Sequential([
+        LSTM(u1, activation='tanh', return_sequences=True, input_shape=(window_size, len(features))),
+        Dropout(d),
+        LSTM(u2, activation='tanh', return_sequences=True),
+        Dropout(d),
+        LSTM(u3, activation='tanh'),
+        Dense(forecast_horizon)
+    ])
+
+    optimizer = Adam(learning_rate=lr)
+    model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+    
+    early_stop = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6)
+    callbacks = [early_stop, reduce_lr]
+
+    history = model.fit(
+        X_train, y_train,
+        validation_data=(X_val, y_val),
+        epochs=100,
+        batch_size=32,
+        callbacks=callbacks,
+        verbose=1
+    )
+
+    val_loss = min(history.history["val_loss"])
+
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        best_params = (u1, u2, u3, d, lr)
+        model.save("lstm_consumption_model.keras")
 
 if X_eval.size > 0:
     loss, mae = model.evaluate(X_eval, y_eval)
     print(f"Evaluate Loss: {loss}, MAE: {mae}")
 
-if X_eval.size > 0:
     sample_X = X_eval[0:1]
     predicted = model.predict(sample_X)
-    predicted = predicted.reshape((forecast_horizon, 3))
+    predicted = predicted.reshape((forecast_horizon,))
+
+    predicted_rescaled = scaler.inverse_transform(
+        np.concatenate([predicted.reshape(-1,1), np.zeros((forecast_horizon, len(features)-1))], axis=1)
+    )[:,0]
+
+    actual_rescaled = scaler.inverse_transform(
+        np.concatenate([evaluate[:forecast_horizon,0].reshape(-1,1),
+                        np.zeros((forecast_horizon, len(features)-1))], axis=1)
+    )[:,0]
 
     plt.figure(figsize=(12,6))
-    pred_index = np.arange(len(X_eval[0]), len(X_eval[0])+forecast_horizon)
-    for i, feature in enumerate(features):
-        actual = evaluate[:forecast_horizon, i]
-        plt.plot(pred_index, actual, label=f'Actual {feature}', linestyle='--')
-        plt.plot(pred_index, predicted[:, i], label=f'Predicted {feature}')
-    plt.xlabel("Index")
-    plt.ylabel("Values")
-    plt.title(f"Actual vs Predicted for {forecast_horizon} Days")
+    plt.plot(actual_rescaled, label='Actual Consumption', linestyle='--')
+    plt.plot(predicted_rescaled, label='Predicted Consumption')
+    plt.xlabel("Days")
+    plt.ylabel("Consumption")
+    plt.title(f"Actual vs Predicted Consumption ({forecast_horizon} days)")
+    plt.savefig(os.path.join(plots_dir, "Actual vs Predicted Consumption.png"))
     plt.legend()
-    plt.savefig(os.path.join(plots_dir, "actual_vs_predicted.png"))
-    plt.close()
+    plt.show()

@@ -48,12 +48,13 @@ print(data.columns)
 # ==> Index(['tavg', 'tmin', 'tmin', 'prcp', 'wspd'], dtype='object')
 
 data = data.reset_index()
-# ==> reset the index to column (time)
+# ==> reset the index to column
 
 data = data.rename(columns={'time': 'date'})
 # ==> rename time to date for preprocess to merge
 
 df = df.reset_index()
+# ==> reset the index to column
 
 merged_files = pd.merge(df, data, on='date', how='inner')
 # ==> merge 2 tables df and data by same column date with type inner join
